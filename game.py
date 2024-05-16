@@ -124,7 +124,8 @@ def move_krest(krest):
 image_image_4 = PhotoImage(file=relative_to_assets("image_2.png"))
 
 def create_and_move_image_2():
-    image_2 = canvas.create_image(0, 540, image=image_image_4)  
+    y_coord = random.randint(0, 900)  # Рандомная координата по y от 0 до 900
+    image_2 = canvas.create_image(0, y_coord, image=image_image_4)  
     move_image_2(image_2)
     window.after(10000, create_and_move_image_2)
 
