@@ -74,9 +74,6 @@ def animate_jump():
         else:
             window.after(10, animate_jump)  
 
-
-
-
 def create_and_move_krest():
     if not paused:
         y_coord = random.choice([random.randint(340, 430), random.randint(700, 800)])  
