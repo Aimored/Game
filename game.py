@@ -127,7 +127,8 @@ def create_and_move_image_2():
     y_coord = random.randint(0, 900)  # Рандомная координата по y от 0 до 900
     image_2 = canvas.create_image(0, y_coord, image=image_image_4)  
     move_image_2(image_2)
-    window.after(10000, create_and_move_image_2)
+    delay = random.randint(10000, 30000)  # Рандомная задержка от 10 до 30 секунд
+    window.after(delay, create_and_move_image_2)
 
 def move_image_2(image):
     canvas.move(image, 10, 0)
@@ -163,7 +164,7 @@ def change_image(event):
         is_invincible = True
         if change_timer:
             window.after_cancel(change_timer)
-        change_timer = window.after(3000, revert_image)
+        change_timer = window.after(2000, revert_image)
 
 def revert_image(event=None):
     global change_timer, cooldown_timer, cooldown_active, is_invincible
