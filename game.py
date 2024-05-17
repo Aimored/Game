@@ -35,6 +35,7 @@ fon_2 = canvas.create_image(3723.0, 540.0, image=image_image_1)
 
 image_image_5 = PhotoImage(file=relative_to_assets("pers.png"))
 nviz_image = PhotoImage(file=relative_to_assets("nviz.png"))
+protect_image = PhotoImage(file=relative_to_assets("protect.png"))
 pers = canvas.create_image(1561.0, 724.0, image=image_image_5)
 
 def move_background():
@@ -121,12 +122,12 @@ def move_krest(krest):
         krest_count += 1
         krest_count_label.config(text=f"пройдено: {krest_count}")
 
-image_image_4 = PhotoImage(file=relative_to_assets("image_2.png"))
+image_image_4 = PhotoImage(file=relative_to_assets("shield.png"))
 
 def create_and_move_image_2():
     y_coord = random.randint(0, 900)  # Рандомная координата по y от 0 до 900
-    image_2 = canvas.create_image(0, y_coord, image=image_image_4)  
-    move_image_2(image_2)
+    shield = canvas.create_image(0, y_coord, image=image_image_4)  
+    move_image_2(shield)
     delay = random.randint(10000, 30000)  # Рандомная задержка от 10 до 30 секунд
     window.after(delay, create_and_move_image_2)
 
@@ -135,11 +136,28 @@ def move_image_2(image):
     x, y = canvas.coords(image)
     
     if x < canvas.winfo_width():
-        window.after(1, move_image_2, image)  
+        if check_collision(canvas.bbox(image), canvas.bbox(pers)):
+            activate_protection()
+            canvas.delete(image)
+        else:
+            window.after(1, move_image_2, image)
     else:
         canvas.delete(image)
 
 create_and_move_image_2()
+
+def activate_protection():
+    global is_invincible, change_timer
+    if not is_invincible:
+        is_invincible = True
+        canvas.itemconfig(pers, image=protect_image)
+        change_timer = window.after(5000, deactivate_protection)
+
+def deactivate_protection():
+    global is_invincible, change_timer
+    is_invincible = False
+    canvas.itemconfig(pers, image=image_image_5)
+    change_timer = None
 
 def game_over():
     choice = tkinter.messagebox.askquestion("Игра закончена", "Хотите заново?")
