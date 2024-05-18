@@ -2,9 +2,10 @@ from pathlib import Path
 from tkinter import Tk, Canvas, Label, PhotoImage
 import tkinter.messagebox
 import random
+import time
 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"assets game\frame0")
+ASSETS_PATH = OUTPUT_PATH / Path(r"assets game/frame0")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -22,10 +23,8 @@ INITIAL_VELOCITY = 29
 is_jumping = False
 vertical_velocity = 0
 paused = False
-change_timer = None
-cooldown_timer = None
-cooldown_active = False
-is_invincible = False
+is_protected = False
+protect_timer = None
 
 canvas = Canvas(window, bg="#FFFFFF", height=1080, width=2483, bd=0, highlightthickness=0, relief="ridge")
 
@@ -76,12 +75,12 @@ def animate_jump():
     global is_jumping, vertical_velocity
     if is_jumping:
         y_position = canvas.coords(pers)[1] - vertical_velocity
-        canvas.coords(pers, 1561.0, y_position)
+        canvas.coords(pers, canvas.coords(pers)[0], y_position)
         
         vertical_velocity -= GRAVITY
         
         if y_position >= 724.0:
-            canvas.coords(pers, 1561.0, 724.0)
+            canvas.coords(pers, canvas.coords(pers)[0], 724.0)
             is_jumping = False
             vertical_velocity = 0
         else:
@@ -95,11 +94,19 @@ def create_and_move_krest():
         delay = max(500, 3000 - 75 * min(krest_count, 20))
         window.after(delay, create_and_move_krest)
 
+def create_and_move_shield():
+    if not paused:
+        y_coord = random.randint(20, 900)  # Spawning shields between 20 and 900 pixels along the y-axis
+        shield = canvas.create_image(0, y_coord, image=image_image_4)
+        move_shield(shield)
+        delay = random.randint(10000, 15000)  # Shields appear every 10-15 seconds
+        window.after(delay, create_and_move_shield)
+
 krest_count_label = Label(window, text="пройдено: 0", bg="#FFFFFF", fg="#800080", font=("Helvetica", 16))
 krest_count_label.place(x=10, y=10)
 
 def move_krest(krest):
-    global is_jumping, paused, krest_count
+    global is_jumping, paused, krest_count, is_protected
     if paused:
         return
     speed_increment = min(krest_count, 25) + 0.5 
@@ -110,10 +117,23 @@ def move_krest(krest):
     krest_rect = [krest_bbox[0], krest_bbox[1], krest_bbox[2], krest_bbox[3]]
     pers_rect = [pers_bbox[0], pers_bbox[1], pers_bbox[2]-80, pers_bbox[3]]
 
-    if not is_invincible and check_collision(krest_rect, pers_rect):
-        paused = True
-        game_over()
+    current_image = canvas.itemcget(pers, "image")
+
+    if current_image == str(protect_image):  # Проверяем, не protect_image ли это
+        if check_collision(krest_rect, pers_rect):
+            canvas.delete(krest)  # Удаляем крест
+            return
+    elif current_image == str(nviz_image):  # Проверяем, не nviz_image ли это
+        if krest_bbox[2] < 1920:
+            window.after(10, move_krest, krest)
+        else:
+            canvas.delete(krest)
         return
+    else:
+        if check_collision(krest_rect, pers_rect):
+            paused = True
+            game_over()
+            return
 
     if krest_bbox[2] < 1920:
         window.after(10, move_krest, krest)
@@ -122,42 +142,36 @@ def move_krest(krest):
         krest_count += 1
         krest_count_label.config(text=f"пройдено: {krest_count}")
 
-image_image_4 = PhotoImage(file=relative_to_assets("shield.png"))
+def move_shield(shield):
+    global paused, is_protected, protect_timer
+    if paused:
+        return
+    canvas.move(shield, BASE_SPEED + 5, 0)
+    shield_bbox = canvas.bbox(shield)
+    pers_bbox = canvas.bbox(pers)
 
-def create_and_move_image_2():
-    y_coord = random.randint(0, 900)  # Рандомная координата по y от 0 до 900
-    shield = canvas.create_image(0, y_coord, image=image_image_4)  
-    move_image_2(shield)
-    delay = random.randint(10000, 30000)  # Рандомная задержка от 10 до 30 секунд
-    window.after(delay, create_and_move_image_2)
+    shield_rect = [shield_bbox[0], shield_bbox[1], shield_bbox[2], shield_bbox[3]]
+    pers_rect = [pers_bbox[0], pers_bbox[1], pers_bbox[2]-80, pers_bbox[3]]
 
-def move_image_2(image):
-    canvas.move(image, 10, 0)
-    x, y = canvas.coords(image)
-    
-    if x < canvas.winfo_width():
-        if check_collision(canvas.bbox(image), canvas.bbox(pers)):
-            activate_protection()
-            canvas.delete(image)
-        else:
-            window.after(1, move_image_2, image)
+    if check_collision(shield_rect, pers_rect):
+        # Логика взаимодействия с щитом
+        canvas.delete(shield)
+        if not is_protected:
+            # Меняем изображение на protect.png без изменения координат
+            canvas.itemconfig(pers, image=protect_image)
+            is_protected = True
+            # Устанавливаем таймер на 8 секунд для возврата изображения
+            if protect_timer:
+                window.after_cancel(protect_timer)
+            protect_timer = window.after(8000, reset_protection)
+        return
+
+    if shield_bbox[2] < 1920:
+        window.after(10, move_shield, shield)
     else:
-        canvas.delete(image)
+        canvas.delete(shield)
 
-create_and_move_image_2()
-
-def activate_protection():
-    global is_invincible, change_timer
-    if not is_invincible:
-        is_invincible = True
-        canvas.itemconfig(pers, image=protect_image)
-        change_timer = window.after(5000, deactivate_protection)
-
-def deactivate_protection():
-    global is_invincible, change_timer
-    is_invincible = False
-    canvas.itemconfig(pers, image=image_image_5)
-    change_timer = None
+image_image_4 = PhotoImage(file=relative_to_assets("shield.png"))
 
 def game_over():
     choice = tkinter.messagebox.askquestion("Игра закончена", "Хотите заново?")
@@ -175,38 +189,62 @@ def check_collision(rect1, rect2):
         return True
     return False
 
+ctrl_pressed = False
+ctrl_timer = None
+last_change_time = 0
+RECHARGE_TIME = 5  # Время перезарядки в секундах
+
 def change_image(event):
-    global change_timer, cooldown_active, is_invincible
-    if not cooldown_active:
-        canvas.itemconfig(pers, image=nviz_image)
-        is_invincible = True
-        if change_timer:
-            window.after_cancel(change_timer)
-        change_timer = window.after(2000, revert_image)
+    global ctrl_pressed, ctrl_timer, last_change_time
+    if is_protected:  # Не обрабатывать нажатие, если персонаж защищен
+        return
+    current_time = time.time()
+    if current_time - last_change_time >= RECHARGE_TIME:
+        if not ctrl_pressed:
+            ctrl_pressed = True
+            canvas.itemconfig(pers, image=nviz_image)
+            ctrl_timer = window.after(2000, reset_image)
+            last_change_time = current_time
 
-def revert_image(event=None):
-    global change_timer, cooldown_timer, cooldown_active, is_invincible
-    canvas.itemconfig(pers, image=image_image_5)
-    is_invincible = False
-    change_timer = None
-    if not cooldown_active:
-        cooldown_active = True
-        cooldown_timer = window.after(5000, reset_cooldown)
+def reset_image():
+    global ctrl_pressed, is_protected
+    if ctrl_pressed:
+        ctrl_pressed = False
+        if not is_protected:  # Если не защищен, возвращаемся к исходному изображению
+            canvas.itemconfig(pers, image=image_image_5)
 
-def reset_cooldown():
-    global cooldown_active
-    cooldown_active = False
+def release_ctrl(event):
+    global ctrl_pressed, ctrl_timer
+    if ctrl_pressed:
+        ctrl_pressed = False
+        if not is_protected:  # Если не защищен, возвращаемся к исходному изображению
+            canvas.itemconfig(pers, image=image_image_5)
+        if ctrl_timer:
+            window.after_cancel(ctrl_timer)
+            ctrl_timer = None
+
+def reset_protection():
+    global is_protected, protect_timer
+    if is_protected:
+        is_protected = False
+        canvas.itemconfig(pers, image=image_image_5)
+    if protect_timer:
+        window.after_cancel(protect_timer)
+        protect_timer = None
 
 image_image_3 = PhotoImage(file=relative_to_assets("krest.png"))
 
 toggle_fullscreen(event=toggle_fullscreen)
 window.bind("<Escape>", toggle_fullscreen)
 window.bind("<space>", jump)
-window.bind("<Control_L>", change_image)
-window.bind("<KeyRelease-Control_L>", revert_image)
+window.bind("<Control_L>", change_image)  # Обработка нажатия левого Ctrl
+window.bind("<Control_R>", change_image)  # Обработка нажатия правого Ctrl
+window.bind("<KeyRelease-Control_L>", release_ctrl)  # Обработка отпускания левого Ctrl
+window.bind("<KeyRelease-Control_R>", release_ctrl)  # Обработка отпускания правого Ctrl
 
 move_background()
 window.after(10, create_and_move_krest)
+window.after(10000, create_and_move_shield)  # Начать создание щитов через 10 секунд
 
 window.resizable(False, False)
 window.mainloop()
