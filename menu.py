@@ -1,13 +1,10 @@
-
-
 from pathlib import Path
 import subprocess
-
-from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage
+from tkinter import Tk, Canvas, Button, PhotoImage
 from tkinter import messagebox
 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"C:\Users\alexp\OneDrive\desktop\runner\assets menu\frame0")
+ASSETS_PATH = OUTPUT_PATH / Path(r"assets menu\frame0")
 
 
 def relative_to_assets(path: str) -> Path:
@@ -16,20 +13,34 @@ def relative_to_assets(path: str) -> Path:
 
 window = Tk()
 
-window.geometry("720x480")
-window.configure(bg = "#FFFFFF")
+
+window_width = 720
+window_height = 480
+
+screen_width = window.winfo_screenwidth()
+screen_height = window.winfo_screenheight()
+
+center_x = int(screen_width / 2 - window_width / 2)
+center_y = int(screen_height / 2 - window_height / 2)
+
+window.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
+
+window.configure(bg="#FFFFFF")
+window.attributes('-topmost', True)
+window.focus_force()
 
 canvas = Canvas(
     window,
-    bg = "#FFFFFF",
-    height = 480,
-    width = 720,
-    bd = 0,
-    highlightthickness = 0,
-    relief = "ridge"
+    bg="#FFFFFF",
+    height=480,
+    width=720,
+    bd=0,
+    highlightthickness=0,
+    relief="ridge"
 )
 
-canvas.place(x = 0, y = 0)
+canvas.place(x=0, y=0)
+
 image_image_1 = PhotoImage(
     file=relative_to_assets("image_1.png"))
 image_1 = canvas.create_image(
@@ -38,11 +49,10 @@ image_1 = canvas.create_image(
     image=image_image_1
 )
 
-
-
 def open_game():
     window.destroy()
     subprocess.Popen(['python', 'game.py'])
+
 button_image_1 = PhotoImage(
     file=relative_to_assets("button_1.png"))
 button_1 = Button(
@@ -58,7 +68,6 @@ button_1.place(
     width=319.0,
     height=71.0
 )
-
 
 button_image_2 = PhotoImage(
     file=relative_to_assets("button_2.png"))
@@ -78,7 +87,6 @@ button_2.place(
 
 def close_window():
     window.destroy()
-
 
 button_image_3 = PhotoImage(file=relative_to_assets("button_3.png"))
 button_3 = Button(
@@ -110,5 +118,6 @@ image_3 = canvas.create_image(
     62.0,
     image=image_image_3
 )
+
 window.resizable(False, False)
 window.mainloop()

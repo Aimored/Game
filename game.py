@@ -3,6 +3,7 @@ from tkinter import Tk, Canvas, Label, PhotoImage
 import tkinter.messagebox
 import random
 import time
+import subprocess
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"assets game/frame0")
@@ -38,6 +39,8 @@ protect_image = PhotoImage(file=relative_to_assets("protect.png"))
 pers = canvas.create_image(1561.0, 724.0, image=image_image_5)
 
 def move_background():
+    if paused:
+        return
     speed_increment = min(krest_count, 10) + 0.1
     canvas.move(fon_1, BACKGROUND_SPEED + speed_increment, 0)
     canvas.move(fon_2, BACKGROUND_SPEED + speed_increment, 0)
@@ -50,7 +53,7 @@ def move_background():
     if x2 >= canvas.winfo_width() + image_width / 2:
         canvas.coords(fon_2, x1 - image_width, 540.0)
     
-    window.after(1, move_background)
+    window.after(5, move_background)  # Уменьшили задержку для плавного движения
 
 canvas.place(x=0, y=0)
 
@@ -66,14 +69,14 @@ canvasWidth = 1920
 
 def jump(event):
     global is_jumping, vertical_velocity
-    if not is_jumping:
+    if not is_jumping and not paused:
         is_jumping = True
         vertical_velocity = INITIAL_VELOCITY
         animate_jump()
 
 def animate_jump():
     global is_jumping, vertical_velocity
-    if is_jumping:
+    if is_jumping and not paused:
         y_position = canvas.coords(pers)[1] - vertical_velocity
         canvas.coords(pers, canvas.coords(pers)[0], y_position)
         
@@ -84,7 +87,7 @@ def animate_jump():
             is_jumping = False
             vertical_velocity = 0
         else:
-            window.after(10, animate_jump)
+            window.after(5, animate_jump)  # Уменьшили задержку для плавного движения
 
 def create_and_move_krest():
     if not paused:
@@ -122,11 +125,12 @@ def move_krest(krest):
     if current_image == str(protect_image):  # Проверяем, не protect_image ли это
         if check_collision(krest_rect, pers_rect):
             canvas.delete(krest)  # Удаляем крест
-            krest_count = krest_count+1
+            krest_count += 1  # Увеличиваем количество крестов
+            krest_count_label.config(text=f"пройдено: {krest_count}")  # Обновляем лейбл
             return
     elif current_image == str(nviz_image):  # Проверяем, не nviz_image ли это
         if krest_bbox[2] < 1920:
-            window.after(10, move_krest, krest)
+            window.after(5, move_krest, krest)  # Уменьшили задержку для плавного движения
         else:
             canvas.delete(krest)
         return
@@ -137,7 +141,7 @@ def move_krest(krest):
             return
 
     if krest_bbox[2] < 1920:
-        window.after(10, move_krest, krest)
+        window.after(5, move_krest, krest)  # Уменьшили задержку для плавного движения
     else:
         canvas.delete(krest)
         krest_count += 1
@@ -168,18 +172,24 @@ def move_shield(shield):
         return
 
     if shield_bbox[2] < 1920:
-        window.after(10, move_shield, shield)
+        window.after(5, move_shield, shield)  # Уменьшили задержку для плавного движения
     else:
         canvas.delete(shield)
 
 image_image_4 = PhotoImage(file=relative_to_assets("shield.png"))
 
 def game_over():
-    choice = tkinter.messagebox.askquestion("Игра закончена", "Хотите заново?")
-    if choice == "yes":
-        window.destroy()
-    else:
-        window.destroy()
+    tkinter.messagebox.showinfo("Игра закончена", f"Вы прошли {krest_count} крестов")
+    global paused
+    paused = True
+    for item in canvas.find_all():
+        if item != pers:
+            canvas.delete(item)
+    window.after(0, end_game)
+
+def end_game():
+    window.destroy()
+    subprocess.Popen(['python', 'menu.py'])
 
 def check_collision(rect1, rect2):
     """Проверяет столкновение между двумя прямоугольниками"""
@@ -211,14 +221,14 @@ def reset_image():
     global ctrl_pressed, is_protected
     if ctrl_pressed:
         ctrl_pressed = False
-        if not is_protected:  # Если не защищен, возвращаемся к исходному изображению
+        if not is_protected:
             canvas.itemconfig(pers, image=image_image_5)
 
 def release_ctrl(event):
     global ctrl_pressed, ctrl_timer
     if ctrl_pressed:
         ctrl_pressed = False
-        if not is_protected:  # Если не защищен, возвращаемся к исходному изображению
+        if not is_protected:
             canvas.itemconfig(pers, image=image_image_5)
         if ctrl_timer:
             window.after_cancel(ctrl_timer)
