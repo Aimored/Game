@@ -96,10 +96,10 @@ def create_and_move_krest():
 
 def create_and_move_shield():
     if not paused:
-        y_coord = random.randint(20, 900)  # Spawning shields between 20 and 900 pixels along the y-axis
+        y_coord = random.randint(20, 900)  
         shield = canvas.create_image(0, y_coord, image=image_image_4)
         move_shield(shield)
-        delay = random.randint(10000, 15000)  # Shields appear every 10-15 seconds
+        delay = random.randint(10000, 15000)  
         window.after(delay, create_and_move_shield)
 
 krest_count_label = Label(window, text="пройдено: 0", bg="#FFFFFF", fg="#800080", font=("Helvetica", 16))
@@ -122,6 +122,7 @@ def move_krest(krest):
     if current_image == str(protect_image):  # Проверяем, не protect_image ли это
         if check_collision(krest_rect, pers_rect):
             canvas.delete(krest)  # Удаляем крест
+            krest_count = krest_count+1
             return
     elif current_image == str(nviz_image):  # Проверяем, не nviz_image ли это
         if krest_bbox[2] < 1920:
@@ -154,13 +155,13 @@ def move_shield(shield):
     pers_rect = [pers_bbox[0], pers_bbox[1], pers_bbox[2]-80, pers_bbox[3]]
 
     if check_collision(shield_rect, pers_rect):
-        # Логика взаимодействия с щитом
+        # щит
         canvas.delete(shield)
         if not is_protected:
-            # Меняем изображение на protect.png без изменения координат
+            # Меняем изображение на щит
             canvas.itemconfig(pers, image=protect_image)
             is_protected = True
-            # Устанавливаем таймер на 8 секунд для возврата изображения
+            # Устанавливаем таймер на 8 секунд для щита
             if protect_timer:
                 window.after_cancel(protect_timer)
             protect_timer = window.after(8000, reset_protection)
@@ -192,7 +193,7 @@ def check_collision(rect1, rect2):
 ctrl_pressed = False
 ctrl_timer = None
 last_change_time = 0
-RECHARGE_TIME = 5  # Время перезарядки в секундах
+RECHARGE_TIME = 5  # Время перезарядки 
 
 def change_image(event):
     global ctrl_pressed, ctrl_timer, last_change_time
@@ -237,14 +238,14 @@ image_image_3 = PhotoImage(file=relative_to_assets("krest.png"))
 toggle_fullscreen(event=toggle_fullscreen)
 window.bind("<Escape>", toggle_fullscreen)
 window.bind("<space>", jump)
-window.bind("<Control_L>", change_image)  # Обработка нажатия левого Ctrl
-window.bind("<Control_R>", change_image)  # Обработка нажатия правого Ctrl
-window.bind("<KeyRelease-Control_L>", release_ctrl)  # Обработка отпускания левого Ctrl
-window.bind("<KeyRelease-Control_R>", release_ctrl)  # Обработка отпускания правого Ctrl
+window.bind("<Control_L>", change_image)  
+window.bind("<Control_R>", change_image)  
+window.bind("<KeyRelease-Control_L>", release_ctrl)  
+window.bind("<KeyRelease-Control_R>", release_ctrl)  
 
 move_background()
 window.after(10, create_and_move_krest)
-window.after(10000, create_and_move_shield)  # Начать создание щитов через 10 секунд
+window.after(10000, create_and_move_shield) 
 
 window.resizable(False, False)
 window.mainloop()
