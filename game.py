@@ -34,7 +34,22 @@ fon_1 = canvas.create_image(1241.0, 540.0, image=image_image_1)
 fon_2 = canvas.create_image(3723.0, 540.0, image=image_image_1)
 
 image_image_5 = PhotoImage(file=relative_to_assets("pers.png"))
-nviz_image = PhotoImage(file=relative_to_assets("nviz.png"))
+walk_images = [
+    PhotoImage(file=relative_to_assets("pers.png")),
+    PhotoImage(file=relative_to_assets("Walk_2.png")),
+    PhotoImage(file=relative_to_assets("Walk_3.png")),
+    PhotoImage(file=relative_to_assets("Walk_4.png")),
+    PhotoImage(file=relative_to_assets("Walk_3.png")),
+    PhotoImage(file=relative_to_assets("Walk_2.png")),
+]
+nviz_images = [
+    PhotoImage(file=relative_to_assets("nviz.png")),
+    PhotoImage(file=relative_to_assets("nviz_2.png")),
+    PhotoImage(file=relative_to_assets("nviz_3.png")),
+    PhotoImage(file=relative_to_assets("nviz_4.png")),
+    PhotoImage(file=relative_to_assets("nviz_3.png")),
+    PhotoImage(file=relative_to_assets("nviz_2.png")),
+]
 protect_image = PhotoImage(file=relative_to_assets("protect.png"))
 pers = canvas.create_image(1561.0, 724.0, image=image_image_5)
 
@@ -53,7 +68,7 @@ def move_background():
     if x2 >= canvas.winfo_width() + image_width / 2:
         canvas.coords(fon_2, x1 - image_width, 540.0)
     
-    window.after(5, move_background)  # Уменьшили задержку для плавного движения
+    window.after(5, move_background)
 
 canvas.place(x=0, y=0)
 
@@ -87,7 +102,7 @@ def animate_jump():
             is_jumping = False
             vertical_velocity = 0
         else:
-            window.after(5, animate_jump)  # Уменьшили задержку для плавного движения
+            window.after(5, animate_jump)
 
 def create_and_move_krest():
     if not paused:
@@ -122,15 +137,15 @@ def move_krest(krest):
 
     current_image = canvas.itemcget(pers, "image")
 
-    if current_image == str(protect_image):  # Проверяем, не protect_image ли это
+    if current_image == str(protect_image):
         if check_collision(krest_rect, pers_rect):
-            canvas.delete(krest)  # Удаляем крест
-            krest_count += 1  # Увеличиваем количество крестов
-            krest_count_label.config(text=f"пройдено: {krest_count}")  # Обновляем лейбл
+            canvas.delete(krest)
+            krest_count += 1
+            krest_count_label.config(text=f"пройдено: {krest_count}")
             return
-    elif current_image == str(nviz_image):  # Проверяем, не nviz_image ли это
+    elif current_image in [str(img) for img in nviz_images]:
         if krest_bbox[2] < 1920:
-            window.after(5, move_krest, krest)  # Уменьшили задержку для плавного движения
+            window.after(5, move_krest, krest)
         else:
             canvas.delete(krest)
         return
@@ -141,7 +156,7 @@ def move_krest(krest):
             return
 
     if krest_bbox[2] < 1920:
-        window.after(5, move_krest, krest)  # Уменьшили задержку для плавного движения
+        window.after(5, move_krest, krest)
     else:
         canvas.delete(krest)
         krest_count += 1
@@ -159,20 +174,17 @@ def move_shield(shield):
     pers_rect = [pers_bbox[0], pers_bbox[1], pers_bbox[2]-80, pers_bbox[3]]
 
     if check_collision(shield_rect, pers_rect):
-        # щит
         canvas.delete(shield)
         if not is_protected:
-            # Меняем изображение на щит
             canvas.itemconfig(pers, image=protect_image)
             is_protected = True
-            # Устанавливаем таймер на 8 секунд для щита
             if protect_timer:
                 window.after_cancel(protect_timer)
             protect_timer = window.after(8000, reset_protection)
         return
 
     if shield_bbox[2] < 1920:
-        window.after(5, move_shield, shield)  # Уменьшили задержку для плавного движения
+        window.after(5, move_shield, shield)
     else:
         canvas.delete(shield)
 
@@ -203,17 +215,17 @@ def check_collision(rect1, rect2):
 ctrl_pressed = False
 ctrl_timer = None
 last_change_time = 0
-RECHARGE_TIME = 5  # Время перезарядки 
+RECHARGE_TIME = 5
 
 def change_image(event):
     global ctrl_pressed, ctrl_timer, last_change_time
-    if is_protected:  # Не обрабатывать нажатие, если персонаж защищен
+    if is_protected:
         return
     current_time = time.time()
     if current_time - last_change_time >= RECHARGE_TIME:
         if not ctrl_pressed:
             ctrl_pressed = True
-            canvas.itemconfig(pers, image=nviz_image)
+            canvas.itemconfig(pers, image=nviz_images[0])
             ctrl_timer = window.after(2000, reset_image)
             last_change_time = current_time
 
@@ -245,17 +257,40 @@ def reset_protection():
 
 image_image_3 = PhotoImage(file=relative_to_assets("krest.png"))
 
+# Функция для анимации
+current_walk_image_index = 0
+current_nviz_image_index = 0
+
+def animate_walk():
+    global current_walk_image_index, current_nviz_image_index
+    if not paused:
+        current_image = canvas.itemcget(pers, "image")
+        if current_image == str(image_image_5):  # Проверяем, что изображение не является nviz_image или protect_image
+            canvas.itemconfig(pers, image=walk_images[0])
+            current_walk_image_index = 1
+        elif current_image == str(protect_image):
+            pass
+        else:
+            if current_image in [str(img) for img in nviz_images]:  # Изменяем анимацию во время невидимости
+                canvas.itemconfig(pers, image=nviz_images[current_nviz_image_index])
+                current_nviz_image_index = (current_nviz_image_index + 1) % len(nviz_images)
+            else:  # Меняем изображение только при обычной ходьбе
+                canvas.itemconfig(pers, image=walk_images[current_walk_image_index])
+                current_walk_image_index = (current_walk_image_index + 1) % len(walk_images)
+        window.after(200, animate_walk)
+
 toggle_fullscreen(event=toggle_fullscreen)
 window.bind("<Escape>", toggle_fullscreen)
 window.bind("<space>", jump)
-window.bind("<Control_L>", change_image)  
-window.bind("<Control_R>", change_image)  
-window.bind("<KeyRelease-Control_L>", release_ctrl)  
-window.bind("<KeyRelease-Control_R>", release_ctrl)  
+window.bind("<Control_L>", change_image)
+window.bind("<Control_R>", change_image)
+window.bind("<KeyRelease-Control_L>", release_ctrl)
+window.bind("<KeyRelease-Control_R>", release_ctrl)
 
 move_background()
 window.after(10, create_and_move_krest)
-window.after(10000, create_and_move_shield) 
+window.after(10000, create_and_move_shield)
+animate_walk()
 
 window.resizable(False, False)
 window.mainloop()
