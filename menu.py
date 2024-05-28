@@ -25,7 +25,6 @@ center_y = int(screen_height / 2 - window_height / 2)
 
 window.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
 
-window.configure(bg="#FFFFFF")
 window.attributes('-topmost', True)
 window.focus_force()
 
@@ -68,14 +67,16 @@ button_1.place(
     width=319.0,
     height=71.0
 )
-
+def rules():
+    window.destroy()
+    subprocess.Popen(['python', 'rules_1.py'])
 button_image_2 = PhotoImage(
     file=relative_to_assets("button_2.png"))
 button_2 = Button(
     image=button_image_2,
     borderwidth=0,
     highlightthickness=0,
-    command=lambda: print("button_2 clicked"),
+    command=lambda:(rules()),
     relief="flat"
 )
 button_2.place(
