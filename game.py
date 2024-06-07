@@ -180,7 +180,7 @@ def move_shield(shield):
             is_protected = True
             if protect_timer:
                 window.after_cancel(protect_timer)
-            protect_timer = window.after(8000, reset_protection)
+            protect_timer = window.after(5000, reset_protection)
         return
 
     if shield_bbox[2] < 1920:
