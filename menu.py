@@ -62,14 +62,14 @@ button_1 = Button(
     relief="flat"
 )
 button_1.place(
-    x=363.0,
+    x=360.0,
     y=187.0,
-    width=319.0,
-    height=71.0
+    width=300.0,
+    height=65.0
 )
 def rules():
     window.destroy()
-    subprocess.Popen(['python', 'rules_1.py'])
+    subprocess.Popen(['python', '_internal\rules_1.py'])
 button_image_2 = PhotoImage(
     file=relative_to_assets("button_2.png"))
 button_2 = Button(
@@ -82,8 +82,8 @@ button_2 = Button(
 button_2.place(
     x=360.0,
     y=283.0,
-    width=317.0,
-    height=66.0
+    width=300.0,
+    height=65.0
 )
 
 def close_window():
@@ -100,15 +100,15 @@ button_3 = Button(
 button_3.place(
     x=359.0,
     y=373.0,
-    width=317.0,
+    width=300.0,
     height=65.0
 )
 
 image_image_2 = PhotoImage(
     file=relative_to_assets("image_2.png"))
 image_2 = canvas.create_image(
-    218.0,
-    237.0,
+    180.0,
+    220.0,
     image=image_image_2
 )
 

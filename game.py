@@ -6,7 +6,7 @@ import time
 import subprocess
 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"assets game/frame0")
+ASSETS_PATH = OUTPUT_PATH / Path(r"assets game\frame0")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -71,14 +71,8 @@ def move_background():
     window.after(5, move_background)
 
 canvas.place(x=0, y=0)
+window.attributes('-fullscreen', True)
 
-def toggle_fullscreen(event):
-    if window.attributes('-fullscreen'):
-        window.attributes('-fullscreen', False)
-        window.overrideredirect(False)
-    else:
-        window.attributes('-fullscreen', True)
-        window.overrideredirect(True)
 
 canvasWidth = 1920
 
@@ -180,7 +174,7 @@ def move_shield(shield):
             is_protected = True
             if protect_timer:
                 window.after_cancel(protect_timer)
-            protect_timer = window.after(5000, reset_protection)
+            protect_timer = window.after(8000, reset_protection)
         return
 
     if shield_bbox[2] < 1920:
@@ -191,7 +185,7 @@ def move_shield(shield):
 image_image_4 = PhotoImage(file=relative_to_assets("shield.png"))
 
 def game_over():
-    tkinter.messagebox.showinfo("Игра закончена", f"Вы прошли {krest_count} крестов")
+    tkinter.messagebox.showinfo("Игра закончена", f"Пройдено крестов: {krest_count}")
     global paused
     paused = True
     for item in canvas.find_all():
@@ -279,8 +273,7 @@ def animate_walk():
                 current_walk_image_index = (current_walk_image_index + 1) % len(walk_images)
         window.after(200, animate_walk)
 
-toggle_fullscreen(event=toggle_fullscreen)
-window.bind("<Escape>", toggle_fullscreen)
+
 window.bind("<space>", jump)
 window.bind("<Control_L>", change_image)
 window.bind("<Control_R>", change_image)
